@@ -396,7 +396,7 @@ export default function WDTSApp() {
       <AnimatePresence>
         {toast && (
           <motion.div
-            className="fixed bottom-24 left-1/2 z-[100] -translate-x-1/2 bg-foreground text-background px-5 py-2 font-display text-xs font-bold shadow-lg"
+            className="fixed bottom-24 left-1/2 z-[100] -translate-x-1/2 bg-foreground/90 backdrop-blur-xl text-background px-5 py-2 rounded-2xl font-display text-xs font-bold shadow-2xl"
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 8 }}
@@ -410,7 +410,7 @@ export default function WDTSApp() {
       <AnimatePresence>
         {loading && (
           <motion.div
-            className="fixed inset-0 z-[60] bg-background/90 flex flex-col items-center justify-center gap-3"
+            className="fixed inset-0 z-[60] bg-background/80 backdrop-blur-2xl flex flex-col items-center justify-center gap-3"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -447,17 +447,17 @@ export default function WDTSApp() {
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
           >
             {/* Topbar */}
-            <header className="fixed top-0 left-0 right-0 z-20 flex items-center justify-between px-5 py-4 bg-background/80 backdrop-blur-sm border-b border-border">
+            <header className="fixed top-0 left-0 right-0 z-20 flex items-center justify-between px-5 py-4 bg-background/60 backdrop-blur-2xl border-b border-foreground/[0.06]">
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="p-2 rounded-sm hover:bg-accent transition-colors text-foreground"
+                className="p-2 rounded-xl hover:bg-foreground/[0.06] transition-colors text-foreground"
               >
                 <Menu size={18} />
               </button>
               <span className="font-display font-extrabold text-sm tracking-[-0.04em] text-foreground">WDTS</span>
               <button
                 onClick={pickAudio}
-                className="p-2 rounded-sm hover:bg-accent transition-colors text-foreground"
+                className="p-2 rounded-xl hover:bg-foreground/[0.06] transition-colors text-foreground"
               >
                 <FileAudio size={18} />
               </button>
@@ -483,10 +483,10 @@ export default function WDTSApp() {
                         return (
                           <motion.span
                             key={`${w}-${i}`}
-                            className={`font-display font-semibold cursor-pointer px-1.5 py-0.5 transition-colors select-none ${
+                            className={`font-display font-semibold cursor-pointer px-2 py-1 rounded-xl transition-colors select-none ${
                               isSaved
                                 ? "bg-foreground text-background"
-                                : "text-foreground hover:bg-accent"
+                                : "text-foreground hover:bg-foreground/[0.06]"
                             }`}
                             style={{ fontSize: "clamp(18px, 4vw, 22px)" }}
                             onClick={(e) => handleWordClick(w, e)}
@@ -529,7 +529,7 @@ export default function WDTSApp() {
                 {engSubs.length === 0 && (
                   <button
                     onClick={() => pickSRT("en")}
-                    className="flex items-center gap-2 px-4 py-2 border border-border text-muted-foreground font-display text-xs hover:border-foreground hover:text-foreground transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl border border-foreground/[0.08] bg-foreground/[0.03] backdrop-blur-sm text-muted-foreground font-display text-xs hover:border-foreground/20 hover:text-foreground transition-colors"
                   >
                     <FileText size={12} />
                     English SRT
@@ -538,7 +538,7 @@ export default function WDTSApp() {
                 {arSubs.length === 0 && (
                   <button
                     onClick={() => pickSRT("ar")}
-                    className="flex items-center gap-2 px-4 py-2 border border-border text-muted-foreground font-display text-xs hover:border-foreground hover:text-foreground transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl border border-foreground/[0.08] bg-foreground/[0.03] backdrop-blur-sm text-muted-foreground font-display text-xs hover:border-foreground/20 hover:text-foreground transition-colors"
                   >
                     <FileText size={12} />
                     Arabic SRT
@@ -549,11 +549,11 @@ export default function WDTSApp() {
               {/* Progress */}
               <div className="w-full mb-3">
                 <div
-                  className="w-full h-1 bg-border cursor-pointer relative group"
+                  className="w-full h-1 bg-foreground/[0.1] rounded-full cursor-pointer relative group"
                   onClick={seekTo}
                 >
                   <div
-                    className="h-full bg-foreground relative transition-[width] duration-100 linear"
+                    className="h-full bg-foreground rounded-full relative transition-[width] duration-100 linear"
                     style={{ width: `${progress * 100}%` }}
                   >
                     <div className="absolute right-[-5px] top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -577,7 +577,7 @@ export default function WDTSApp() {
 
                 <motion.button
                   onClick={togglePlay}
-                  className="w-16 h-16 rounded-full bg-foreground flex items-center justify-center text-background"
+                  className="w-16 h-16 rounded-full bg-foreground flex items-center justify-center text-background shadow-[0_0_30px_-5px] shadow-foreground/20"
                   whileHover={{ scale: 1.06 }}
                   whileTap={{ scale: 0.95 }}
                 >
