@@ -529,7 +529,7 @@ export default function WDTSApp() {
                 {engSubs.length === 0 && (
                   <button
                     onClick={() => pickSRT("en")}
-                    className="flex items-center gap-2 px-4 py-2 border border-border text-muted-foreground font-display text-xs hover:border-foreground hover:text-foreground transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl border border-foreground/[0.08] bg-foreground/[0.03] backdrop-blur-sm text-muted-foreground font-display text-xs hover:border-foreground/20 hover:text-foreground transition-colors"
                   >
                     <FileText size={12} />
                     English SRT
@@ -538,7 +538,7 @@ export default function WDTSApp() {
                 {arSubs.length === 0 && (
                   <button
                     onClick={() => pickSRT("ar")}
-                    className="flex items-center gap-2 px-4 py-2 border border-border text-muted-foreground font-display text-xs hover:border-foreground hover:text-foreground transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl border border-foreground/[0.08] bg-foreground/[0.03] backdrop-blur-sm text-muted-foreground font-display text-xs hover:border-foreground/20 hover:text-foreground transition-colors"
                   >
                     <FileText size={12} />
                     Arabic SRT
