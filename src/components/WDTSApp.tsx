@@ -549,7 +549,7 @@ export default function WDTSApp() {
               {/* Progress */}
               <div className="w-full mb-3">
                 <div
-                  className="w-full h-1 bg-border cursor-pointer relative group"
+                  className="w-full h-1 bg-foreground/[0.1] rounded-full cursor-pointer relative group"
                   onClick={seekTo}
                 >
                   <div
