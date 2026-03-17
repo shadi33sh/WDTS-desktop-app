@@ -396,7 +396,7 @@ export default function WDTSApp() {
       <AnimatePresence>
         {toast && (
           <motion.div
-            className="fixed bottom-24 left-1/2 z-[100] -translate-x-1/2 bg-foreground text-background px-5 py-2 font-display text-xs font-bold shadow-lg"
+            className="fixed bottom-24 left-1/2 z-[100] -translate-x-1/2 bg-foreground/90 backdrop-blur-xl text-background px-5 py-2 rounded-2xl font-display text-xs font-bold shadow-2xl"
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 8 }}
