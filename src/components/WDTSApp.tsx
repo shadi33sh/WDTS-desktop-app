@@ -577,7 +577,7 @@ export default function WDTSApp() {
 
                 <motion.button
                   onClick={togglePlay}
-                  className="w-16 h-16 rounded-full bg-foreground flex items-center justify-center text-background"
+                  className="w-16 h-16 rounded-full bg-foreground flex items-center justify-center text-background shadow-[0_0_30px_-5px] shadow-foreground/20"
                   whileHover={{ scale: 1.06 }}
                   whileTap={{ scale: 0.95 }}
                 >
