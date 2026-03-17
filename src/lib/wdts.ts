@@ -69,10 +69,10 @@ export const FS_SUPPORTED =
   typeof window !== "undefined" && "showOpenFilePicker" in window;
 
 export async function pickFileWithHandle(
-  opts: OpenFilePickerOptions
+  opts: any
 ): Promise<{ handle: FileSystemFileHandle; file: File } | null> {
   try {
-    const [handle] = await window.showOpenFilePicker(opts);
+    const [handle] = await (window as any).showOpenFilePicker(opts);
     const file = await handle.getFile();
     return { handle, file };
   } catch (e: unknown) {
