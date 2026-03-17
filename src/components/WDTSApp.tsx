@@ -410,7 +410,7 @@ export default function WDTSApp() {
       <AnimatePresence>
         {loading && (
           <motion.div
-            className="fixed inset-0 z-[60] bg-background/90 flex flex-col items-center justify-center gap-3"
+            className="fixed inset-0 z-[60] bg-background/80 backdrop-blur-2xl flex flex-col items-center justify-center gap-3"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
