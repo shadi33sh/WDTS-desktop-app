@@ -483,10 +483,10 @@ export default function WDTSApp() {
                         return (
                           <motion.span
                             key={`${w}-${i}`}
-                            className={`font-display font-semibold cursor-pointer px-1.5 py-0.5 transition-colors select-none ${
+                            className={`font-display font-semibold cursor-pointer px-2 py-1 rounded-xl transition-colors select-none ${
                               isSaved
                                 ? "bg-foreground text-background"
-                                : "text-foreground hover:bg-accent"
+                                : "text-foreground hover:bg-foreground/[0.06]"
                             }`}
                             style={{ fontSize: "clamp(18px, 4vw, 22px)" }}
                             onClick={(e) => handleWordClick(w, e)}
