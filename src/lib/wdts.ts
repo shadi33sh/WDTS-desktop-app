@@ -145,7 +145,7 @@ export async function reopenHandle(name: string): Promise<File | null> {
   try {
     const handle = await loadHandle(name);
     if (!handle) return null;
-    const perm = await handle.requestPermission({ mode: "read" });
+    const perm = await (handle as any).requestPermission({ mode: "read" });
     if (perm !== "granted") return null;
     return await handle.getFile();
   } catch {
