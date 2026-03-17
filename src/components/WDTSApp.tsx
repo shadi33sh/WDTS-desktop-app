@@ -553,7 +553,7 @@ export default function WDTSApp() {
                   onClick={seekTo}
                 >
                   <div
-                    className="h-full bg-foreground relative transition-[width] duration-100 linear"
+                    className="h-full bg-foreground rounded-full relative transition-[width] duration-100 linear"
                     style={{ width: `${progress * 100}%` }}
                   >
                     <div className="absolute right-[-5px] top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
