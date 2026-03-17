@@ -450,14 +450,14 @@ export default function WDTSApp() {
             <header className="fixed top-0 left-0 right-0 z-20 flex items-center justify-between px-5 py-4 bg-background/60 backdrop-blur-2xl border-b border-foreground/[0.06]">
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="p-2 rounded-sm hover:bg-accent transition-colors text-foreground"
+                className="p-2 rounded-xl hover:bg-foreground/[0.06] transition-colors text-foreground"
               >
                 <Menu size={18} />
               </button>
               <span className="font-display font-extrabold text-sm tracking-[-0.04em] text-foreground">WDTS</span>
               <button
                 onClick={pickAudio}
-                className="p-2 rounded-sm hover:bg-accent transition-colors text-foreground"
+                className="p-2 rounded-xl hover:bg-foreground/[0.06] transition-colors text-foreground"
               >
                 <FileAudio size={18} />
               </button>
