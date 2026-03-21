@@ -251,8 +251,8 @@ export default function WDTSApp() {
         if (file) {
           showToast(`Resuming at ${fmt(entry.lastPosition)}`);
           await loadAudioFile(file, entry.lastPosition, entry);
+          // loading is cleared inside onloadedmetadata or onerror
           await tryLoadStoredSrts(entry.id);
-          setLoading(null);
           return;
         }
         setLoading(null);
