@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Sun, Moon, Clock, BookOpen, Trash2 } from "lucide-react";
+import { X, Sun, Moon, Clock, BookOpen, Trash2, Info } from "lucide-react";
 import type { WordEntry, HistoryEntry } from "@/lib/wdts";
+import WordInfoModal from "@/components/WordInfoModal";
 import { fmt, fmtDate } from "@/lib/wdts";
 
 interface AppSidebarProps {
@@ -32,6 +33,7 @@ export default function AppSidebar({
   handledIds,
 }: AppSidebarProps) {
   const [tab, setTab] = useState<Tab>("words");
+  const [infoWord, setInfoWord] = useState<string | null>(null);
 
   return (
     <AnimatePresence>
@@ -126,12 +128,21 @@ export default function AppSidebar({
                                 </p>
                               )}
                             </div>
-                            <button
-                              onClick={() => onRemoveWord(w.word)}
-                              className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-all"
-                            >
-                              <Trash2 size={12} />
-                            </button>
+                            <div className="flex items-center gap-0.5">
+                              <button
+                                onClick={() => setInfoWord(w.word)}
+                                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-all"
+                                title="Word info"
+                              >
+                                <Info size={12} />
+                              </button>
+                              <button
+                                onClick={() => onRemoveWord(w.word)}
+                                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-all"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            </div>
                           </motion.div>
                         ))}
                       </div>
@@ -230,6 +241,9 @@ export default function AppSidebar({
               </button>
             </div>
           </motion.aside>
+
+          {/* Word Info Modal */}
+          <WordInfoModal word={infoWord} onClose={() => setInfoWord(null)} />
         </>
       )}
     </AnimatePresence>
