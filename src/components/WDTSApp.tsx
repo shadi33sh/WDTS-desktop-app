@@ -10,6 +10,7 @@ import {
   saveHandle, loadHandle, reopenHandle, deleteHandle,
   parseSRT, getHistory, upsertHistory, removeHistory,
   getWords, addWord, removeWord, fmt, fmtDate,
+  srtHandleKey, reopenSrtHandle,
 } from "@/lib/wdts";
 
 export default function WDTSApp() {
