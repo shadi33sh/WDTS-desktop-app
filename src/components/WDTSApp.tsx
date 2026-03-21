@@ -145,6 +145,17 @@ export default function WDTSApp() {
       audio.src = url;
       audio.load();
 
+      audio.onerror = () => {
+        showToast("Failed to load audio — file may be corrupted or missing");
+        URL.revokeObjectURL(url);
+        blobRef.current = null;
+        setAudioUrl(null);
+        setAudioName(null);
+        setIsPlaying(false);
+        setLoading(null);
+        entryRef.current = null;
+      };
+
       audio.onloadedmetadata = async () => {
         const dur = (audio.duration || 0) * 1000;
         setDuration(dur);
