@@ -33,6 +33,7 @@ export default function AppSidebar({
   handledIds,
 }: AppSidebarProps) {
   const [tab, setTab] = useState<Tab>("words");
+  const [infoWord, setInfoWord] = useState<string | null>(null);
 
   return (
     <AnimatePresence>
