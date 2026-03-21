@@ -241,6 +241,9 @@ export default function AppSidebar({
               </button>
             </div>
           </motion.aside>
+
+          {/* Word Info Modal */}
+          <WordInfoModal word={infoWord} onClose={() => setInfoWord(null)} />
         </>
       )}
     </AnimatePresence>
