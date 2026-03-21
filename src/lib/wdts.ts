@@ -204,6 +204,8 @@ export const removeHistory = (id: string): void => {
     JSON.stringify(getHistory().filter((x) => x.id !== id))
   );
   deleteHandle(id).catch(() => {});
+  deleteHandle(srtHandleKey(id, "en")).catch(() => {});
+  deleteHandle(srtHandleKey(id, "ar")).catch(() => {});
 };
 
 export const getWords = (): WordEntry[] => {
