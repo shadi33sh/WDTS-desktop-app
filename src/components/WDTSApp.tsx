@@ -248,18 +248,27 @@ export default function WDTSApp() {
   const pickSRT = useCallback(async (lang: "en" | "ar") => {
     try {
       let file: File | null = null;
+      let handle: FileSystemFileHandle | undefined;
       if (FS_SUPPORTED) {
         const res = await pickFileWithHandle({
           types: [{ description: "SRT Subtitle", accept: { "text/plain": [".srt"], "application/x-subrip": [".srt"] } }],
           multiple: false,
         });
         file = res?.file ?? null;
+        handle = res?.handle;
       } else {
         file = await pickFileFallback(".srt,application/x-subrip,text/plain");
       }
       if (!file) return;
       const raw = await file.text();
       const parsed = parseSRT(raw);
+
+      // Save SRT handle to IndexedDB for auto-reload on resume
+      if (handle && entryRef.current) {
+        const key = srtHandleKey(entryRef.current.id, lang);
+        await saveHandle(key, handle);
+      }
+
       if (lang === "en") {
         setEngSubs(parsed); engRef.current = parsed;
         if (entryRef.current) {
