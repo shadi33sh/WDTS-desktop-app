@@ -153,6 +153,27 @@ export async function reopenHandle(name: string): Promise<File | null> {
   }
 }
 
+/** Build the IndexedDB key used to store an SRT file handle. */
+export function srtHandleKey(audioId: string, lang: "en" | "ar"): string {
+  return `srt_${lang}_${audioId}`;
+}
+
+/** Try to reopen a stored SRT handle and parse it. Returns parsed SubEntry[] or null. */
+export async function reopenSrtHandle(audioId: string, lang: "en" | "ar"): Promise<{ entries: SubEntry[]; fileName: string } | null> {
+  try {
+    const key = srtHandleKey(audioId, lang);
+    const handle = await loadHandle(key);
+    if (!handle) return null;
+    const perm = await (handle as any).requestPermission({ mode: "read" });
+    if (perm !== "granted") return null;
+    const file = await handle.getFile();
+    const raw = await file.text();
+    return { entries: parseSRT(raw), fileName: file.name };
+  } catch {
+    return null;
+  }
+}
+
 /* ═══════════════════════════════════════════════════════
    LOCALSTORAGE
 ═══════════════════════════════════════════════════════ */
@@ -183,6 +204,8 @@ export const removeHistory = (id: string): void => {
     JSON.stringify(getHistory().filter((x) => x.id !== id))
   );
   deleteHandle(id).catch(() => {});
+  deleteHandle(srtHandleKey(id, "en")).catch(() => {});
+  deleteHandle(srtHandleKey(id, "ar")).catch(() => {});
 };
 
 export const getWords = (): WordEntry[] => {

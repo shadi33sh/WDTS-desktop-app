@@ -10,6 +10,7 @@ import {
   saveHandle, loadHandle, reopenHandle, deleteHandle,
   parseSRT, getHistory, upsertHistory, removeHistory,
   getWords, addWord, removeWord, fmt, fmtDate,
+  srtHandleKey, reopenSrtHandle,
 } from "@/lib/wdts";
 
 export default function WDTSApp() {
@@ -144,6 +145,17 @@ export default function WDTSApp() {
       audio.src = url;
       audio.load();
 
+      audio.onerror = () => {
+        showToast("Failed to load audio — file may be corrupted or missing");
+        URL.revokeObjectURL(url);
+        blobRef.current = null;
+        setAudioUrl(null);
+        setAudioName(null);
+        setIsPlaying(false);
+        setLoading(null);
+        entryRef.current = null;
+      };
+
       audio.onloadedmetadata = async () => {
         const dur = (audio.duration || 0) * 1000;
         setDuration(dur);
@@ -159,6 +171,23 @@ export default function WDTSApp() {
     },
     [startRAF, stopRAF]
   );
+
+  /* ── Try to auto-load stored SRT handles for an entry ── */
+  const tryLoadStoredSrts = useCallback(async (entryId: string) => {
+    if (!FS_SUPPORTED) return;
+    const [enResult, arResult] = await Promise.all([
+      reopenSrtHandle(entryId, "en"),
+      reopenSrtHandle(entryId, "ar"),
+    ]);
+    if (enResult) {
+      setEngSubs(enResult.entries);
+      engRef.current = enResult.entries;
+    }
+    if (arResult) {
+      setArSubs(arResult.entries);
+      arRef.current = arResult.entries;
+    }
+  }, []);
 
   /* ── Pick audio ── */
   const pickAudio = useCallback(async () => {
@@ -186,10 +215,11 @@ export default function WDTSApp() {
       }
       if (resumeAt > 0) showToast(`Resuming at ${fmt(resumeAt)}`);
       await loadAudioFile(file, resumeAt, existing);
+      if (existing) await tryLoadStoredSrts(file.name);
     } catch (err) {
       console.error(err);
     }
-  }, [loadAudioFile]);
+  }, [loadAudioFile, tryLoadStoredSrts]);
 
   /* ── Resume ── */
   const resumeEntry = useCallback(
@@ -203,11 +233,12 @@ export default function WDTSApp() {
         if (file) {
           showToast(`Resuming at ${fmt(entry.lastPosition)}`);
           await loadAudioFile(file, entry.lastPosition, entry);
+          await tryLoadStoredSrts(entry.id);
           setLoading(null);
           return;
         }
         setLoading(null);
-        showToast("Please re-select the file to resume");
+        showToast("File not found — please re-select to resume");
         let newFile: File | null = null;
         let newHandle: FileSystemFileHandle | undefined;
         if (FS_SUPPORTED) {
@@ -235,30 +266,41 @@ export default function WDTSApp() {
         }
         showToast(`Resuming at ${fmt(entry.lastPosition)}`);
         await loadAudioFile(newFile!, entry.lastPosition, entry);
+        await tryLoadStoredSrts(entry.id);
       } catch (err) {
         console.error(err);
+        showToast("Failed to open file — it may have been moved or deleted");
         setLoading(null);
       }
     },
-    [loadAudioFile]
+    [loadAudioFile, tryLoadStoredSrts]
   );
 
   /* ── Pick SRT ── */
   const pickSRT = useCallback(async (lang: "en" | "ar") => {
     try {
       let file: File | null = null;
+      let handle: FileSystemFileHandle | undefined;
       if (FS_SUPPORTED) {
         const res = await pickFileWithHandle({
           types: [{ description: "SRT Subtitle", accept: { "text/plain": [".srt"], "application/x-subrip": [".srt"] } }],
           multiple: false,
         });
         file = res?.file ?? null;
+        handle = res?.handle;
       } else {
         file = await pickFileFallback(".srt,application/x-subrip,text/plain");
       }
       if (!file) return;
       const raw = await file.text();
       const parsed = parseSRT(raw);
+
+      // Save SRT handle to IndexedDB for auto-reload on resume
+      if (handle && entryRef.current) {
+        const key = srtHandleKey(entryRef.current.id, lang);
+        await saveHandle(key, handle);
+      }
+
       if (lang === "en") {
         setEngSubs(parsed); engRef.current = parsed;
         if (entryRef.current) {
