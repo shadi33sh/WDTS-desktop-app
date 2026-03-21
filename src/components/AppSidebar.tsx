@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Sun, Moon, Clock, BookOpen, Trash2 } from "lucide-react";
+import { X, Sun, Moon, Clock, BookOpen, Trash2, Info } from "lucide-react";
 import type { WordEntry, HistoryEntry } from "@/lib/wdts";
+import WordInfoModal from "@/components/WordInfoModal";
 import { fmt, fmtDate } from "@/lib/wdts";
 
 interface AppSidebarProps {
