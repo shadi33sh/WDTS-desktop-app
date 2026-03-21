@@ -162,7 +162,7 @@ export default function AppSidebar({
                             initial={{ opacity: 0, y: 5 }}
                             animate={{ opacity: 1, y: 0 }}
                           >
-                            <div className="flex items-start justify-between gap-2">
+                             <div className="flex items-start justify-between gap-2">
                               <p className="font-display font-semibold text-xs text-foreground truncate flex-1">
                                 {item.name}
                               </p>
@@ -177,6 +177,27 @@ export default function AppSidebar({
                             <p className="font-mono text-[10px] text-muted-foreground mt-1">
                               {fmt(item.lastPosition)} / {fmt(item.duration)} · {fmtDate(item.updatedAt)}
                             </p>
+                            {/* SRT file indicators */}
+                            <div className="flex gap-1.5 mt-1.5">
+                              {item.engSubName ? (
+                                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-md bg-foreground/[0.06] text-foreground/70 border border-foreground/[0.06] truncate max-w-[120px]" title={item.engSubName}>
+                                  EN ✓
+                                </span>
+                              ) : (
+                                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-md bg-foreground/[0.03] text-muted-foreground/50">
+                                  EN —
+                                </span>
+                              )}
+                              {item.arSubName ? (
+                                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-md bg-foreground/[0.06] text-foreground/70 border border-foreground/[0.06] truncate max-w-[120px]" title={item.arSubName}>
+                                  AR ✓
+                                </span>
+                              ) : (
+                                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-md bg-foreground/[0.03] text-muted-foreground/50">
+                                  AR —
+                                </span>
+                              )}
+                            </div>
                             <div className="h-px bg-foreground/[0.08] mt-2 rounded-full">
                               <div
                                 className="h-full bg-foreground/40 rounded-full"

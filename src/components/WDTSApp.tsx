@@ -118,7 +118,12 @@ export default function WDTSApp() {
     async (file: File, resumePosition: number, existingEntry?: HistoryEntry) => {
       stopRAF();
       const a = audioRef.current;
-      if (a) { a.pause(); a.src = ""; }
+      if (a) {
+        a.pause();
+        a.onloadedmetadata = null;
+        a.onerror = null;
+        a.src = "";
+      }
       if (blobRef.current) { URL.revokeObjectURL(blobRef.current); blobRef.current = null; }
 
       const url = URL.createObjectURL(file);
@@ -142,18 +147,23 @@ export default function WDTSApp() {
       await new Promise((r) => setTimeout(r, 50));
       const audio = audioRef.current;
       if (!audio) return;
-      audio.src = url;
-      audio.load();
 
+      // Set handlers BEFORE setting src to avoid race conditions
       audio.onerror = () => {
         showToast("Failed to load audio — file may be corrupted or missing");
+        audio.pause();
+        audio.src = "";
+        audio.onerror = null;
+        audio.onloadedmetadata = null;
         URL.revokeObjectURL(url);
         blobRef.current = null;
         setAudioUrl(null);
         setAudioName(null);
         setIsPlaying(false);
+        setIsEnded(false);
         setLoading(null);
         entryRef.current = null;
+        stopRAF();
       };
 
       audio.onloadedmetadata = async () => {
@@ -164,10 +174,18 @@ export default function WDTSApp() {
         upsertHistory(updated);
         setHist(getHistory());
         if (resumePosition > 0) audio.currentTime = resumePosition / 1000;
-        await audio.play().catch(() => {});
-        setIsPlaying(true);
+        setLoading(null);
+        try {
+          await audio.play();
+          setIsPlaying(true);
+        } catch {
+          setIsPlaying(false);
+        }
         startRAF();
       };
+
+      audio.src = url;
+      audio.load();
     },
     [startRAF, stopRAF]
   );
