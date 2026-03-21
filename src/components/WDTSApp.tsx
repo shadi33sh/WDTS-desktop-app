@@ -203,6 +203,23 @@ export default function WDTSApp() {
     }
   }, [loadAudioFile]);
 
+  /* ── Try to auto-load stored SRT handles for an entry ── */
+  const tryLoadStoredSrts = useCallback(async (entryId: string) => {
+    if (!FS_SUPPORTED) return;
+    const [enResult, arResult] = await Promise.all([
+      reopenSrtHandle(entryId, "en"),
+      reopenSrtHandle(entryId, "ar"),
+    ]);
+    if (enResult) {
+      setEngSubs(enResult.entries);
+      engRef.current = enResult.entries;
+    }
+    if (arResult) {
+      setArSubs(arResult.entries);
+      arRef.current = arResult.entries;
+    }
+  }, []);
+
   /* ── Resume ── */
   const resumeEntry = useCallback(
     async (entry: HistoryEntry) => {
@@ -215,11 +232,12 @@ export default function WDTSApp() {
         if (file) {
           showToast(`Resuming at ${fmt(entry.lastPosition)}`);
           await loadAudioFile(file, entry.lastPosition, entry);
+          await tryLoadStoredSrts(entry.id);
           setLoading(null);
           return;
         }
         setLoading(null);
-        showToast("Please re-select the file to resume");
+        showToast("File not found — please re-select to resume");
         let newFile: File | null = null;
         let newHandle: FileSystemFileHandle | undefined;
         if (FS_SUPPORTED) {
@@ -247,12 +265,14 @@ export default function WDTSApp() {
         }
         showToast(`Resuming at ${fmt(entry.lastPosition)}`);
         await loadAudioFile(newFile!, entry.lastPosition, entry);
+        await tryLoadStoredSrts(entry.id);
       } catch (err) {
         console.error(err);
+        showToast("Failed to open file — it may have been moved or deleted");
         setLoading(null);
       }
     },
-    [loadAudioFile]
+    [loadAudioFile, tryLoadStoredSrts]
   );
 
   /* ── Pick SRT ── */
