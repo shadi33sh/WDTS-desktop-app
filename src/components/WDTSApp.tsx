@@ -172,6 +172,23 @@ export default function WDTSApp() {
     [startRAF, stopRAF]
   );
 
+  /* ── Try to auto-load stored SRT handles for an entry ── */
+  const tryLoadStoredSrts = useCallback(async (entryId: string) => {
+    if (!FS_SUPPORTED) return;
+    const [enResult, arResult] = await Promise.all([
+      reopenSrtHandle(entryId, "en"),
+      reopenSrtHandle(entryId, "ar"),
+    ]);
+    if (enResult) {
+      setEngSubs(enResult.entries);
+      engRef.current = enResult.entries;
+    }
+    if (arResult) {
+      setArSubs(arResult.entries);
+      arRef.current = arResult.entries;
+    }
+  }, []);
+
   /* ── Pick audio ── */
   const pickAudio = useCallback(async () => {
     setEngSubs([]); setArSubs([]);
@@ -198,29 +215,11 @@ export default function WDTSApp() {
       }
       if (resumeAt > 0) showToast(`Resuming at ${fmt(resumeAt)}`);
       await loadAudioFile(file, resumeAt, existing);
-      // Auto-load stored SRT files if resuming an existing entry
       if (existing) await tryLoadStoredSrts(file.name);
     } catch (err) {
       console.error(err);
     }
   }, [loadAudioFile, tryLoadStoredSrts]);
-
-  /* ── Try to auto-load stored SRT handles for an entry ── */
-  const tryLoadStoredSrts = useCallback(async (entryId: string) => {
-    if (!FS_SUPPORTED) return;
-    const [enResult, arResult] = await Promise.all([
-      reopenSrtHandle(entryId, "en"),
-      reopenSrtHandle(entryId, "ar"),
-    ]);
-    if (enResult) {
-      setEngSubs(enResult.entries);
-      engRef.current = enResult.entries;
-    }
-    if (arResult) {
-      setArSubs(arResult.entries);
-      arRef.current = arResult.entries;
-    }
-  }, []);
 
   /* ── Resume ── */
   const resumeEntry = useCallback(
