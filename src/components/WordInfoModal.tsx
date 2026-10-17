@@ -73,7 +73,7 @@ export default function WordInfoModal({ word, onClose }: WordInfoModalProps) {
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="pointer-events-auto w-full max-w-md max-h-[80vh] bg-surface/90 backdrop-blur-2xl border border-foreground/[0.08] rounded-2xl flex flex-col shadow-2xl overflow-hidden"
+              className="pointer-events-auto w-full max-w-3xl max-h-[80vh] bg-surface/90 backdrop-blur-sm border border-foreground/[0.08] rounded-2xl flex flex-col shadow-2xl overflow-hidden"
               initial={{ scale: 0.95, y: 10 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, y: 10 }}

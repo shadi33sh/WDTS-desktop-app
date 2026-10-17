@@ -1,17 +1,41 @@
 {
-  "name": "vite_react_shadcn_ts",
+  "name": "wdts",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "build:dev": "vite build --mode development",
-    "lint": "eslint .",
-    "preview": "vite preview",
-    "test": "vitest run",
-    "test:watch": "vitest"
+  "build": {
+    "appId": "com.wdts.english",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron.js",
+      "preload.js",
+      "icon.png",
+      "build/icon.png",
+      "build/icon.ico"
+    ],
+    "icon": "build/icon.png",
+    "win": {
+      "icon": "build/icon.ico",
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "artifactName": "WDTS-${version}-Setup.${ext}"
   },
+  "scripts": {
+    "vite": "vite",
+    "dev": "npx concurrently \"vite\" \"node node_modules/electron/cli.js .\"",
+    "electron": "node node_modules/electron/cli.js .",
+    "build": "vite build",
+    "preview": "vite preview",
+    "dist": "npm run build && electron-builder"
+  },
+  "main": "electron.js",
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-accordion": "^1.2.11",
@@ -75,12 +99,14 @@
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react": "^6.0.0",
     "autoprefixer": "^10.4.21",
+    "concurrently": "^9.2.1",
+    "electron": "^41.0.3",
+    "electron-builder": "^26.8.1",
     "eslint": "^9.32.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^15.15.0",
     "jsdom": "^20.0.3",
-    "lovable-tagger": "^1.1.13",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.3",

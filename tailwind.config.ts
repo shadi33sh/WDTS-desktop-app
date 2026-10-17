@@ -17,7 +17,7 @@ export default {
         display: ["Syne", "sans-serif"],
         body: ["Inter", "sans-serif"],
         mono: ["JetBrains Mono", "monospace"],
-        arabic: ["Noto Sans Arabic", "sans-serif"],
+        arabic: ["Syne"],
       },
       colors: {
         border: "hsl(var(--border))",

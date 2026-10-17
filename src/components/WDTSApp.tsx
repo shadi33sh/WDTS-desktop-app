@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, Play, Pause, SkipBack, SkipForward, RotateCcw, FileAudio, FileText } from "lucide-react";
+import { Menu, Play, Pause, SkipBack, SkipForward, RotateCcw, FileAudio, FileText, X } from "lucide-react";
 import GreetingPage from "@/components/GreetingPage";
 import AppSidebar from "@/components/AppSidebar";
 import WordConfirmPopover from "@/components/WordConfirmPopover";
@@ -14,7 +14,7 @@ import {
 } from "@/lib/wdts";
 
 export default function WDTSApp() {
-  const [dark, setDark] = useState(false);
+  const [dark, setDark] = useState(true);
 
   // Apply dark class
   useEffect(() => {
@@ -57,6 +57,7 @@ export default function WDTSApp() {
   const slotRef = useRef(-1);
   const entryRef = useRef<HistoryEntry | null>(null);
   const blobRef = useRef<string | null>(null);
+  const seekingPointerRef = useRef<number | null>(null);
 
   useEffect(() => { engRef.current = engSubs; }, [engSubs]);
   useEffect(() => { arRef.current = arSubs; }, [arSubs]);
@@ -85,21 +86,23 @@ export default function WDTSApp() {
       const a = audioRef.current;
       if (!a) return;
       const pos = a.currentTime * 1000;
-      setPosition(pos);
-      const findSub = (subs: SubEntry[]) =>
-        subs.find((s) => pos >= s.start && pos <= s.end)?.text ?? "";
-      setSub({ en: findSub(engRef.current), ar: findSub(arRef.current) });
-      const slot = Math.floor(pos / 30_000);
-      if (slot !== slotRef.current && entryRef.current) {
-        slotRef.current = slot;
-        const updated: HistoryEntry = {
-          ...entryRef.current,
-          lastPosition: pos,
-          duration: (a.duration || 0) * 1000,
-        };
-        entryRef.current = updated;
-        upsertHistory(updated);
-        setHist(getHistory());
+      if (seekingPointerRef.current === null) {
+        setPosition(pos);
+        const findSub = (subs: SubEntry[]) =>
+          subs.find((s) => pos >= s.start && pos <= s.end)?.text ?? "";
+        setSub({ en: findSub(engRef.current), ar: findSub(arRef.current) });
+        const slot = Math.floor(pos / 30_000);
+        if (slot !== slotRef.current && entryRef.current) {
+          slotRef.current = slot;
+          const updated: HistoryEntry = {
+            ...entryRef.current,
+            lastPosition: pos,
+            duration: (a.duration || 0) * 1000,
+          };
+          entryRef.current = updated;
+          upsertHistory(updated);
+          setHist(getHistory());
+        }
       }
       rafRef.current = requestAnimationFrame(tick);
     };
@@ -341,6 +344,37 @@ export default function WDTSApp() {
     }
   }, []);
 
+  const removeSRT = async (lang: "en" | "ar") => {
+    const entry = entryRef.current;
+    try {
+      if (entry) await deleteHandle(srtHandleKey(entry.id, lang));
+    } catch (err) {
+      console.error(err);
+      showToast(`Failed to remove ${lang === "en" ? "English" : "Arabic"} subtitles`);
+      return;
+    }
+
+    if (lang === "en") {
+      setEngSubs([]);
+      engRef.current = [];
+      setSub((current) => ({ ...current, en: "" }));
+    } else {
+      setArSubs([]);
+      arRef.current = [];
+      setSub((current) => ({ ...current, ar: "" }));
+    }
+
+    if (entry) {
+      const updated = { ...entry };
+      if (lang === "en") delete updated.engSubName;
+      else delete updated.arSubName;
+      entryRef.current = updated;
+      upsertHistory(updated);
+      setHist(getHistory());
+    }
+    showToast(`${lang === "en" ? "English" : "Arabic"} subtitles removed`);
+  };
+
   /* ── Controls ── */
   const togglePlay = () => {
     const a = audioRef.current;
@@ -355,6 +389,7 @@ export default function WDTSApp() {
   };
 
   const seek = (secs: number) => {
+    cancelWord()
     const a = audioRef.current;
     if (!a) return;
     const newT = Math.max(0, Math.min(a.duration || 0, a.currentTime + secs));
@@ -367,13 +402,35 @@ export default function WDTSApp() {
     });
   };
 
-  const seekTo = (e: React.MouseEvent<HTMLDivElement>) => {
+  const seekTo = (e: React.PointerEvent<HTMLDivElement>) => {
     const a = audioRef.current;
     if (!a || !a.duration) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
     a.currentTime = pct * a.duration;
-    setPosition(a.currentTime * 1000);
+    const pos = a.currentTime * 1000;
+    setPosition(pos);
+    setSub({
+      en: engRef.current.find((s) => pos >= s.start && pos <= s.end)?.text ?? "",
+      ar: arRef.current.find((s) => pos >= s.start && pos <= s.end)?.text ?? "",
+    });
+  };
+
+  const startSeeking = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0 || !audioRef.current?.duration) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    seekingPointerRef.current = e.pointerId;
+    seekTo(e);
+  };
+
+  const moveSeeking = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (seekingPointerRef.current === e.pointerId) seekTo(e);
+  };
+
+  const finishSeeking = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (seekingPointerRef.current !== e.pointerId) return;
+    seekTo(e);
+    seekingPointerRef.current = null;
   };
 
   /* ── Toast ── */
@@ -483,6 +540,27 @@ export default function WDTSApp() {
 
       {/* Main content */}
       <AnimatePresence mode="wait">
+
+               <header className="fixed top-0 left-0 right-0 z-20 flex items-center justify-between px-5 py-5 bg-gradient-to-b from-background  ">
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="p-2 rounded-xl hover:bg-foreground/[0.06] transition-colors text-foreground"
+              >
+                <Menu size={18} />
+              </button>
+              {audioUrl &&
+              <span className="font-display font-extrabold text-xl tracking-[-0.04em] text-foreground">WDTS</span>
+            }
+              <button
+                onClick={pickAudio}
+                className="p-2 rounded-xl hover:bg-foreground/[0.06] transition-colors text-foreground"
+              >
+                <FileAudio size={18} />
+              </button>
+            </header>
+
+
+
         {!audioUrl ? (
           <motion.div
             key="greeting"
@@ -491,7 +569,8 @@ export default function WDTSApp() {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
           >
-            <GreetingPage
+            <GreetingPage 
+              dark={dark}
               onOpen={pickAudio}
               historyCount={history.length}
               onShowHistory={() => { setSidebarOpen(true); setShowHistInSidebar(true); }}
@@ -507,26 +586,11 @@ export default function WDTSApp() {
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
           >
             {/* Topbar */}
-            <header className="fixed top-0 left-0 right-0 z-20 flex items-center justify-between px-5 py-4 bg-background/60 backdrop-blur-2xl border-b border-foreground/[0.06]">
-              <button
-                onClick={() => setSidebarOpen(true)}
-                className="p-2 rounded-xl hover:bg-foreground/[0.06] transition-colors text-foreground"
-              >
-                <Menu size={18} />
-              </button>
-              <span className="font-display font-extrabold text-sm tracking-[-0.04em] text-foreground">WDTS</span>
-              <button
-                onClick={pickAudio}
-                className="p-2 rounded-xl hover:bg-foreground/[0.06] transition-colors text-foreground"
-              >
-                <FileAudio size={18} />
-              </button>
-            </header>
 
             {/* Stage */}
             <main className="flex-1 flex flex-col items-center justify-center max-w-lg mx-auto w-full px-6 pt-20 pb-8">
               {/* EN Subtitles */}
-              <div className="min-h-[96px] w-full flex flex-wrap gap-1.5 justify-center items-center py-4 mb-2">
+              <div className="h-[126px] w-full flex flex-wrap gap-1.5 justify-center items-center py-4 mb-2">
                 <AnimatePresence mode="wait">
                   {sub.en ? (
                     <motion.div
@@ -535,7 +599,7 @@ export default function WDTSApp() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 30 , duration : 100 }}
                     >
                       {sub.en.split(/\s+/).map((w, i) => {
                         const cleaned = w.replace(/[^a-zA-Z']/g, "").toLowerCase();
@@ -572,7 +636,7 @@ export default function WDTSApp() {
                   {sub.ar && (
                     <motion.p
                       key={sub.ar}
-                      className="font-arabic text-sm text-muted-foreground leading-relaxed"
+                      className=" text-sm text-muted-foreground leading-relaxed"
                       style={{ direction: "rtl" }}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -586,7 +650,7 @@ export default function WDTSApp() {
 
               {/* SRT buttons */}
               <div className="flex gap-2 flex-wrap justify-center mb-8">
-                {engSubs.length === 0 && (
+                {engSubs.length === 0 && !entryRef.current?.engSubName ? (
                   <button
                     onClick={() => pickSRT("en")}
                     className="flex items-center gap-2 px-4 py-2 rounded-xl border border-foreground/[0.08] bg-foreground/[0.03] backdrop-blur-sm text-muted-foreground font-display text-xs hover:border-foreground/20 hover:text-foreground transition-colors"
@@ -594,8 +658,22 @@ export default function WDTSApp() {
                     <FileText size={12} />
                     English SRT
                   </button>
+                ) : (
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-foreground/[0.08] bg-foreground/[0.03] text-muted-foreground font-display text-xs">
+                    <FileText size={12} />
+                    <span className="max-w-[150px] truncate" title={entryRef.current?.engSubName}>English SRT{entryRef.current?.engSubName ? ` · ${entryRef.current.engSubName}` : ""}</span>
+                    <button
+                      type="button"
+                      onClick={() => void removeSRT("en")}
+                      aria-label="Remove English subtitles"
+                      title="Remove English subtitles"
+                      className="rounded-full p-1 hover:bg-foreground/[0.08] hover:text-foreground"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
                 )}
-                {arSubs.length === 0 && (
+                {arSubs.length === 0 && !entryRef.current?.arSubName ? (
                   <button
                     onClick={() => pickSRT("ar")}
                     className="flex items-center gap-2 px-4 py-2 rounded-xl border border-foreground/[0.08] bg-foreground/[0.03] backdrop-blur-sm text-muted-foreground font-display text-xs hover:border-foreground/20 hover:text-foreground transition-colors"
@@ -603,17 +681,34 @@ export default function WDTSApp() {
                     <FileText size={12} />
                     Arabic SRT
                   </button>
+                ) : (
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-foreground/[0.08] bg-foreground/[0.03] text-muted-foreground font-display text-xs">
+                    <FileText size={12} />
+                    <span className="max-w-[150px] truncate" title={entryRef.current?.arSubName}>Arabic SRT{entryRef.current?.arSubName ? ` · ${entryRef.current.arSubName}` : ""}</span>
+                    <button
+                      type="button"
+                      onClick={() => void removeSRT("ar")}
+                      aria-label="Remove Arabic subtitles"
+                      title="Remove Arabic subtitles"
+                      className="rounded-full p-1 hover:bg-foreground/[0.08] hover:text-foreground"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
                 )}
               </div>
 
               {/* Progress */}
               <div className="w-full mb-3">
                 <div
-                  className="w-full h-1 bg-foreground/[0.1] rounded-full cursor-pointer relative group"
-                  onClick={seekTo}
+                  className="w-full h-1 bg-foreground/[0.1] rounded-full cursor-pointer relative group touch-none"
+                  onPointerDown={startSeeking}
+                  onPointerMove={moveSeeking}
+                  onPointerUp={finishSeeking}
+                  onPointerCancel={finishSeeking}
                 >
                   <div
-                    className="h-full bg-foreground rounded-full relative transition-[width] duration-100 linear"
+                    className="h-full bg-foreground rounded-full relative"
                     style={{ width: `${progress * 100}%` }}
                   >
                     <div className="absolute right-[-5px] top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
